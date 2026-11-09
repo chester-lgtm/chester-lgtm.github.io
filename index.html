@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>四則運算：數學勇者的試煉｜國中數學</title>
+<style>
+  :root{
+    --bg:#060a16;
+    --panel:rgba(255,255,255,.055);
+    --panel2:rgba(255,255,255,.09);
+    --line:rgba(255,255,255,.13);
+    --ink:#f2f5ff;
+    --muted:#9eabc9;
+    --mint:#5eead4;
+    --amber:#fcd34d;
+    --coral:#fb7185;
+    --violet:#a78bfa;
+    --blue:#60a5fa;
+    --green:#34d399;
+    --sans:"Microsoft JhengHei","PingFang TC","Noto Sans TC","Heiti TC",system-ui,sans-serif;
+    --math:"Cambria Math",Cambria,"Times New Roman",Georgia,serif;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);overflow:hidden;-webkit-font-smoothing:antialiased}
+  button{font-family:inherit;color:inherit}
+  #stageWrap{position:fixed;inset:0;overflow:hidden}
+  #stage{
+    position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center center;
+    background:
+      radial-gradient(900px 520px at 82% -12%,rgba(94,234,212,.13),transparent 62%),
+      radial-gradient(760px 520px at -8% 108%,rgba(167,139,250,.15),transparent 62%),
+      radial-gradient(600px 400px at 50% 120%,rgba(251,113,133,.08),transparent 60%),
+      #070b18;
+    overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,.04),0 40px 120px rgba(0,0,0,.65);
+  }
+  #stage::after{
+    content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
+    background-image:linear-gradient(rgba(255,255,255,.028) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.028) 1px,transparent 1px);
+    background-size:56px 56px;
+    mask-image:radial-gradient(circle at 50% 45%,#000 30%,transparent 78%);
+    -webkit-mask-image:radial-gradient(circle at 50% 45%,#000 30%,transparent 78%);
+  }
+  .slide{
+    position:absolute;inset:0;padding:58px 70px 92px;display:flex;flex-direction:column;
+    opacity:0;visibility:hidden;transform:translateY(16px);transition:opacity .45s ease,transform .45s ease;
+    --a:var(--mint);
+  }
+  .slide.active{opacity:1;visibility:visible;transform:none}
+  .slide::before{
+    content:"";position:absolute;width:560px;height:560px;right:-140px;top:-230px;border-radius:50%;
+    background:radial-gradient(circle,var(--a),transparent 68%);opacity:.11;pointer-events:none;
+  }
+  .slide-head{position:relative;margin-bottom:22px;flex:0 0 auto}
+  .kicker{display:inline-flex;align-items:center;gap:9px;font-size:13px;font-weight:700;letter-spacing:.18em;color:var(--a);text-transform:uppercase;margin-bottom:12px}
+  .kicker::before{content:"";width:26px;height:2px;background:var(--a);border-radius:2px}
+  h1,h2,h3,p{margin:0}
+  h2{font-size:44px;line-height:1.16;letter-spacing:.01em;font-weight:900}
+  h2 .hl{color:var(--a)}
+  .sub{margin-top:9px;font-size:18px;line-height:1.55;color:var(--muted)}
+  .body{position:relative;flex:1;min-height:0}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:22px;position:relative;overflow:hidden}
+  .card.soft{background:rgba(255,255,255,.035)}
+  .card .num{font-family:var(--math);font-size:14px;font-weight:700;color:var(--a);letter-spacing:.1em;margin-bottom:9px}
+  .card h3{font-size:20px;line-height:1.35;margin-bottom:8px;font-weight:800}
+  .card p{font-size:14.5px;line-height:1.7;color:var(--muted)}
+  .tagrow{display:flex;flex-wrap:wrap;gap:8px}
+  .tag{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--line);border-radius:999px;font-size:12.5px;color:#cfd9f2;background:rgba(255,255,255,.04)}
+  .tag b{color:var(--a)}
+  .expr{font-family:var(--math);letter-spacing:.02em}
+  .big-expr{font-family:var(--math);font-size:30px;line-height:1.5}
+  .muted{color:var(--muted)}
+  .accent{color:var(--a)}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:9px;border:0;border-radius:999px;
+    padding:13px 24px;font-size:15px;font-weight:800;cursor:pointer;text-decoration:none;
+    background:linear-gradient(135deg,var(--mint),#38bdf8);color:#04121c;
+    box-shadow:0 10px 28px rgba(94,234,212,.22);transition:transform .18s,box-shadow .18s,filter .18s;
+  }
+  .btn:hover{transform:translateY(-2px);box-shadow:0 14px 34px rgba(94,234,212,.3);filter:brightness(1.05)}
+  .btn.ghost{background:rgba(255,255,255,.06);color:var(--ink);border:1px solid var(--line);box-shadow:none}
+  .btn.ghost:hover{background:rgba(255,255,255,.11)}
+  .btn.amber{background:linear-gradient(135deg,var(--amber),#fb923c);color:#241503;box-shadow:0 10px 28px rgba(252,211,77,.2)}
+  .btn.sm{padding:10px 18px;font-size:13.5px}
+  .topbar{position:absolute;left:0;right:0;top:0;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 38px;z-index:40;pointer-events:none}
+  .brand{display:flex;align-items:center;gap:11px;font-size:13px;font-weight:800;letter-spacing:.12em;color:#cbd6ef;pointer-events:auto}
+  .brand .mark{width:28px;height:28px;border-radius:9px;background:linear-gradient(135deg,var(--mint),var(--violet));display:grid;place-items:center;color:#06101f;font-family:var(--math);font-size:16px;font-weight:900;box-shadow:0 6px 18px rgba(94,234,212,.25)}
+  .brand em{font-style:normal;color:var(--muted);font-weight:600;letter-spacing:.05em}
+  .tools{display:flex;align-items:center;gap:8px;pointer-events:auto}
+  .ico-btn{width:36px;height:36px;border-radius:11px;border:1px solid var(--line);background:rgba(255,255,255,.05);display:grid;place-items:center;cursor:pointer;font-size:15px;color:#cbd6ef;transition:background .2s}
+  .ico-btn:hover{background:rgba(255,255,255,.12)}
+  .progress{position:absolute;left:0;right:0;top:0;height:3px;background:rgba(255,255,255,.06);z-index:50}
+  .progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--mint),var(--blue),var(--violet));transition:width .45s ease;box-shadow:0 0 18px rgba(94,234,212,.6)}
+  .bottom{position:absolute;left:0;right:0;bottom:0;height:74px;display:flex;align-items:center;justify-content:space-between;padding:0 38px;z-index:40}
+  .nav-btns{display:flex;gap:8px}
+  .nav-btn{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.055);display:grid;place-items:center;cursor:pointer;font-size:17px;transition:.2s}
+  .nav-btn:hover{background:rgba(255,255,255,.13);transform:translateY(-1px)}
+  .nav-btn:disabled{opacity:.25;cursor:default;transform:none}
+  .dots{display:flex;gap:7px;align-items:center}
+  .dot{width:7px;height:7px;border-radius:99px;border:0;background:rgba(255,255,255,.22);cursor:pointer;transition:.25s;padding:0}
+  .dot.on{width:24px;background:var(--mint);box-shadow:0 0 12px rgba(94,234,212,.55)}
+  .counter{font-family:var(--math);font-size:13px;color:var(--muted);letter-spacing:.08em;min-width:82px;text-align:right}
+  .pagenum{position:absolute;right:52px;bottom:84px;font-family:var(--math);font-size:132px;font-weight:700;line-height:1;color:rgba(255,255,255,.035);pointer-events:none;user-select:none}
+  .reveal{display:none;margin-top:12px;padding:12px 15px;border-left:3px solid var(--a);background:rgba(255,255,255,.045);border-radius:0 12px 12px 0;font-size:14px;line-height:1.65;color:#dbe4fa}
+  .revealed .reveal,.reveal.open{display:block;animation:fadeUp .35s ease}
+  .reveal-btn{border:0;background:none;color:var(--a);font-size:13.5px;font-weight:800;cursor:pointer;padding:0;margin-top:12px;letter-spacing:.03em}
+  .reveal-btn:hover{text-decoration:underline}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+  @keyframes pulse{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:1;transform:scale(1.04)}}
+  .anim{opacity:0;transform:translateY(14px)}
+  .slide.active .anim{animation:fadeUp .6s cubic-bezier(.2,.7,.3,1) forwards}
+  .slide.active .d1{animation-delay:.08s}.slide.active .d2{animation-delay:.16s}.slide.active .d3{animation-delay:.24s}.slide.active .d4{animation-delay:.32s}.slide.active .d5{animation-delay:.4s}
+  .cover{padding:0;display:block}
+  .cover-wrap{position:absolute;inset:0;display:grid;grid-template-columns:1.06fr .94fr;align-items:center;padding:78px 64px 92px 76px;gap:10px}
+  .cover-copy{position:relative;z-index:2}
+  .cover h1{font-size:88px;line-height:1.02;font-weight:900;letter-spacing:-.02em;margin:16px 0 0}
+  .cover h1 span{display:block;font-size:58px;line-height:1.14;margin-top:6px;background:linear-gradient(100deg,var(--mint),var(--blue) 55%,var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .cover .lead{margin-top:18px;font-size:17.5px;line-height:1.75;color:#b9c6e4;max-width:500px}
+  .cover .tagrow{margin-top:20px}
+  .cover-cta{display:flex;align-items:center;gap:14px;margin-top:28px}
+  .cover-meta{margin-top:24px;font-size:12.5px;color:var(--muted);letter-spacing:.06em;display:flex;gap:16px;align-items:center}
+  .cover-meta i{width:4px;height:4px;border-radius:50%;background:var(--mint);display:inline-block}
+  .cover-art{position:relative;height:470px;display:grid;place-items:center}
+  .cover-art svg{width:100%;height:100%;overflow:visible}
+  .float-a{animation:floaty 6s ease-in-out infinite}
+  .float-b{animation:floaty 7s ease-in-out infinite reverse}
+  .path-card{display:flex;align-items:center;gap:14px;padding:15px 16px;border-radius:16px;background:rgba(255,255,255,.045);border:1px solid var(--line);margin-bottom:10px}
+  .path-card .pnum{flex:0 0 42px;height:42px;border-radius:13px;display:grid;place-items:center;font-family:var(--math);font-weight:900;font-size:16px;color:#06101f;background:var(--a)}
+  .path-card h3{font-size:16px;margin:0 0 3px}
+  .path-card p{font-size:12.5px;margin:0;line-height:1.45}
+  .scenario{padding:20px;display:flex;flex-direction:column;gap:12px;min-height:238px}
+  .scenario .icon{width:44px;height:44px;border-radius:13px;background:rgba(255,255,255,.06);border:1px solid var(--line);display:grid;place-items:center}
+  .scenario .icon svg{width:24px;height:24px}
+  .scenario .ans{margin-top:auto;font-family:var(--math);font-size:22px;color:var(--a);font-weight:700}
+  .scenario .ans small{font-family:var(--sans);font-size:12px;color:var(--muted);font-weight:600;display:block;margin-bottom:2px;letter-spacing:.05em}
+  .notebar{margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:14px 18px;border-radius:16px;border:1px dashed rgba(94,234,212,.35);background:rgba(94,234,212,.055)}
+  .notebar p{font-size:14px;color:#cfe9e4;line-height:1.5}
+  .notebar b{color:var(--mint)}
+  .numberline{width:100%;height:auto;display:block}
+  .rule-card{padding:16px 18px;border-radius:16px;background:rgba(255,255,255,.045);border:1px solid var(--line);margin-bottom:10px}
+  .rule-card .rt{font-size:13px;font-weight:800;color:var(--a);letter-spacing:.06em;margin-bottom:5px}
+  .rule-card p{font-size:13.5px;line-height:1.55;color:#c7d2e9}
+  .formula-strip{display:flex;align-items:center;justify-content:center;gap:18px;padding:16px;border-radius:16px;background:linear-gradient(110deg,rgba(94,234,212,.1),rgba(167,139,250,.1));border:1px solid rgba(94,234,212,.22);font-family:var(--math);font-size:24px}
+  .example-row{display:flex;align-items:center;gap:16px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.075);font-size:15px}
+  .example-row:last-child{border-bottom:0}
+  .example-row .ex{font-family:var(--math);font-size:21px;min-width:180px}
+  .example-row .why{color:var(--muted);font-size:13px;line-height:1.4}
+  .sign-table{width:100%;border-collapse:separate;border-spacing:6px;font-family:var(--math);text-align:center}
+  .sign-table th,.sign-table td{padding:11px 8px;border-radius:10px;background:rgba(255,255,255,.045);font-size:18px}
+  .sign-table th{font-family:var(--sans);font-size:11.5px;letter-spacing:.08em;color:var(--muted);font-weight:700;background:transparent}
+  .sign-table td.pos{color:var(--green);font-weight:700;background:rgba(52,211,153,.1)}
+  .sign-table td.neg{color:var(--coral);font-weight:700;background:rgba(251,113,133,.1)}
+  .pipe{display:flex;align-items:stretch;gap:8px}
+  .pipe-step{flex:1;padding:14px 12px;border-radius:15px;background:rgba(255,255,255,.045);border:1px solid var(--line);text-align:center;position:relative}
+  .pipe-step .pn{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;margin:0 auto 8px;background:var(--a);color:#06101f;font-weight:900;font-size:13px;font-family:var(--math)}
+  .pipe-step b{display:block;font-size:14.5px;margin-bottom:3px}
+  .pipe-step span{font-size:11.5px;color:var(--muted);line-height:1.4;display:block}
+  .pipe-arrow{align-self:center;color:rgba(255,255,255,.25);font-size:15px}
+  .step-box{padding:16px 18px;border-radius:16px;background:rgba(255,255,255,.045);border:1px solid var(--line);margin-bottom:9px;opacity:.32;transition:.4s}
+  .step-box.on{opacity:1;border-color:rgba(94,234,212,.35);background:rgba(94,234,212,.06)}
+  .step-box .sn{font-size:11px;font-weight:800;letter-spacing:.12em;color:var(--a);margin-bottom:4px}
+  .step-box .se{font-family:var(--math);font-size:23px}
+  .step-box .sd{font-size:12.5px;color:var(--muted);margin-top:3px}
+  #stepDemo{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  #stepDemo .step-box{margin-bottom:0;padding:10px 14px}
+  #stepDemo .step-box .se{font-size:20px;line-height:1.35}
+  #stepDemo .step-box .sd{font-size:11px}
+  #stepDemo > div:last-child{grid-column:1/-1;margin-top:2px}
+  .flip{height:168px;perspective:900px;background:none;border:0;padding:0;cursor:pointer;text-align:left}
+  .flip-inner{position:relative;width:100%;height:100%;transition:transform .55s cubic-bezier(.2,.7,.3,1);transform-style:preserve-3d}
+  .flip.open .flip-inner{transform:rotateY(180deg)}
+  .flip-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:18px;border:1px solid var(--line);padding:18px;display:flex;flex-direction:column;justify-content:center;background:rgba(255,255,255,.05)}
+  .flip-front .q{font-family:var(--math);font-size:28px;color:var(--ink)}
+  .flip-front .hint{font-size:11.5px;color:var(--muted);margin-top:8px;letter-spacing:.06em}
+  .flip-front .warn{position:absolute;top:12px;right:14px;font-size:10px;color:var(--coral);border:1px solid rgba(251,113,133,.4);padding:2px 7px;border-radius:99px;letter-spacing:.08em}
+  .flip-back{transform:rotateY(180deg);background:linear-gradient(150deg,rgba(94,234,212,.12),rgba(96,165,250,.07));border-color:rgba(94,234,212,.28)}
+  .flip-back .ans{font-family:var(--math);font-size:24px;color:var(--mint);margin-bottom:7px}
+  .flip-back .why{font-size:12.5px;line-height:1.5;color:#c7d2e9}
+  .steps4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .steps4 .s{padding:14px 12px;border-radius:15px;background:rgba(255,255,255,.045);border:1px solid var(--line);text-align:center}
+  .steps4 .s .n{width:30px;height:30px;margin:0 auto 8px;border-radius:50%;display:grid;place-items:center;background:var(--a);color:#06101f;font-weight:900;font-size:13px}
+  .steps4 .s b{display:block;font-size:14px;margin-bottom:3px}
+  .steps4 .s span{font-size:11.5px;color:var(--muted);line-height:1.4;display:block}
+  .work{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .work .qbox{padding:18px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid var(--line);font-size:14.5px;line-height:1.75;color:#dbe4fa}
+  .work .qbox b{color:var(--a)}
+  .final{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px 20px;border-radius:16px;background:linear-gradient(110deg,rgba(252,211,77,.1),rgba(251,113,133,.07));border:1px solid rgba(252,211,77,.24);margin-top:12px}
+  .final .fx{font-family:var(--math);font-size:26px;color:var(--amber)}
+  .game-rules{display:flex;flex-direction:column;gap:10px}
+  .gr{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:13px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
+  .gr .gi{width:34px;height:34px;flex:0 0 34px;border-radius:10px;display:grid;place-items:center;background:rgba(94,234,212,.1);color:var(--mint);font-weight:900;font-family:var(--math);font-size:14px}
+  .gr b{font-size:14px;display:block;margin-bottom:1px}
+  .gr span{font-size:11.5px;color:var(--muted);line-height:1.4;display:block}
+  .best{display:flex;align-items:baseline;gap:8px;margin-top:14px;font-size:12px;color:var(--muted)}
+  .best b{font-family:var(--math);font-size:22px;color:var(--amber)}
+  .summary{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .sum{display:flex;gap:14px;padding:15px 16px;border-radius:16px;background:rgba(255,255,255,.045);border:1px solid var(--line)}
+  .sum .si{width:38px;height:38px;flex:0 0 38px;border-radius:11px;display:grid;place-items:center;background:rgba(94,234,212,.1);color:var(--mint);font-family:var(--math);font-size:18px;font-weight:900}
+  .sum b{font-size:14.5px;display:block;margin-bottom:3px}
+  .sum p{font-size:12px;line-height:1.5;color:var(--muted)}
+  .checkline{display:flex;align-items:center;gap:10px;font-size:13.5px;color:#c7d2e9;margin-top:8px}
+  .checkline .ck{width:20px;height:20px;border-radius:6px;background:rgba(52,211,153,.14);border:1px solid rgba(52,211,153,.35);display:grid;place-items:center;color:var(--green);font-size:12px}
+  .quote{font-size:25px;line-height:1.65;font-weight:700;letter-spacing:.01em}
+  .quote em{font-style:normal;color:var(--a)}
+  .end-actions{display:flex;gap:12px;margin-top:22px}
+  .end-note{font-size:11.5px;color:rgba(158,171,201,.7);letter-spacing:.05em;margin-top:26px}
+  .toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);background:#0d1730;border:1px solid var(--line);color:#dbe4fa;padding:10px 18px;border-radius:99px;font-size:13px;opacity:0;pointer-events:none;transition:.3s;z-index:300}
+  .toast.on{opacity:1;transform:translate(-50%,0)}
+  /* ===== 遊戲覆蓋層 ===== */
+  .hidden{display:none!important}
+  .game{
+    position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;
+    background:
+      radial-gradient(900px 600px at 84% -10%,rgba(94,234,212,.13),transparent 60%),
+      radial-gradient(800px 600px at -10% 110%,rgba(167,139,250,.15),transparent 60%),
+      linear-gradient(160deg,#070b18,#0a1024 55%,#070b18);
+    overflow:hidden;
+  }
+  .game::before{
+    content:"";position:absolute;inset:0;pointer-events:none;opacity:.4;
+    background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);
+    background-size:52px 52px;
+    mask-image:radial-gradient(circle at 50% 45%,#000 20%,transparent 75%);
+    -webkit-mask-image:radial-gradient(circle at 50% 45%,#000 20%,transparent 75%);
+  }
+  .g-head{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 28px;border-bottom:1px solid rgba(255,255,255,.08);flex:0 0 auto}
+  .g-brand{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:800;letter-spacing:.14em;color:#cbd6ef}
+  .g-brand .mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--mint),var(--violet));display:grid;place-items:center;color:#06101f;font-family:var(--math);font-weight:900}
+  .g-hud{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+  .hud{display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:11px;border:1px solid var(--line);background:rgba(255,255,255,.045);font-size:12.5px;font-weight:700;white-space:nowrap}
+  .hud .lbl{font-size:10px;letter-spacing:.8px;color:var(--muted);font-weight:700}
+  .hud b{font-family:var(--math);font-size:16px;color:var(--amber)}
+  .hearts{display:flex;gap:3px;font-size:16px;line-height:1}
+  .hearts .h{color:var(--coral);transition:.25s;filter:drop-shadow(0 0 5px rgba(251,113,133,.5))}
+  .hearts .h.off{color:rgba(255,255,255,.14);filter:none}
+  .combo.on{color:var(--amber);border-color:rgba(252,211,77,.4);background:rgba(252,211,77,.09)}
+  .timer-wrap{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 7px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.045)}
+  .timer-wrap svg{width:34px;height:34px;transform:rotate(-90deg)}
+  .timer-wrap .tnum{font-family:var(--math);font-size:18px;font-weight:700;min-width:28px;text-align:center}
+  .timer-wrap.warn .tnum{color:var(--coral)}
+  .g-close{width:38px;height:38px;border-radius:11px;border:1px solid var(--line);background:rgba(255,255,255,.05);cursor:pointer;font-size:18px;color:#cbd6ef;display:grid;place-items:center}
+  .g-close:hover{background:rgba(251,113,133,.14);border-color:rgba(251,113,133,.4)}
+  .g-progress{position:relative;z-index:2;height:4px;background:rgba(255,255,255,.06);flex:0 0 auto}
+  .g-progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--mint),var(--amber),var(--coral));transition:width .4s ease;box-shadow:0 0 14px rgba(252,211,77,.5)}
+  .g-main{position:relative;z-index:2;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:22px 26px;overflow:auto}
+  .play{width:100%;max-width:960px;display:flex;flex-direction:column;gap:14px;margin:auto}
+  .q-meta{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .q-left{display:flex;align-items:center;gap:10px}
+  .lv{font-size:11px;font-weight:800;letter-spacing:.12em;padding:5px 11px;border-radius:999px;border:1px solid rgba(94,234,212,.35);color:var(--mint);background:rgba(94,234,212,.08)}
+  .lv.lv2{color:var(--amber);border-color:rgba(252,211,77,.35);background:rgba(252,211,77,.08)}
+  .lv.lv3{color:var(--coral);border-color:rgba(251,113,133,.35);background:rgba(251,113,133,.08)}
+  .q-index{font-family:var(--math);font-size:12.5px;color:var(--muted);letter-spacing:.08em}
+  .q-note{font-size:11.5px;color:rgba(158,171,201,.7);letter-spacing:.06em}
+  .q-card{
+    position:relative;border-radius:26px;border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(150deg,rgba(255,255,255,.075),rgba(255,255,255,.035));
+    padding:30px 34px;box-shadow:0 24px 70px rgba(0,0,0,.3);
+  }
+  .q-card::after{content:"";position:absolute;left:34px;right:34px;top:0;height:2px;background:linear-gradient(90deg,transparent,var(--mint),transparent);opacity:.55}
+  .q-text{font-size:40px;line-height:1.45;font-weight:800;font-family:var(--math);letter-spacing:.02em;text-align:center;padding:4px 0 22px}
+  .q-text.small{font-size:30px;font-family:var(--sans);line-height:1.55}
+  .opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .opt{
+    display:flex;align-items:center;gap:14px;text-align:left;padding:15px 18px;border-radius:15px;
+    border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.045);cursor:pointer;
+    font-size:21px;font-family:var(--math);transition:transform .15s,border-color .2s,background .2s;
+  }
+  .opt:hover:not(:disabled){transform:translateY(-2px);border-color:rgba(94,234,212,.5);background:rgba(94,234,212,.08)}
+  .opt:disabled{cursor:default}
+  .opt .key{flex:0 0 30px;height:30px;border-radius:9px;display:grid;place-items:center;background:rgba(255,255,255,.07);font-family:var(--sans);font-size:12px;font-weight:800;color:var(--muted);transition:.2s}
+  .opt.right{border-color:rgba(52,211,153,.65);background:rgba(52,211,153,.12)}
+  .opt.right .key{background:var(--green);color:#04120c}
+  .opt.wrong{border-color:rgba(251,113,133,.65);background:rgba(251,113,133,.11)}
+  .opt.wrong .key{background:var(--coral);color:#210408}
+  .opt.dim{opacity:.48}
+  .fb{min-height:82px;border-radius:16px;padding:0;transition:.25s;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .fb.show{padding:14px 18px;background:rgba(255,255,255,.045);border:1px solid var(--line)}
+  .fb.ok{border-color:rgba(52,211,153,.35);background:rgba(52,211,153,.07)}
+  .fb.no{border-color:rgba(251,113,133,.35);background:rgba(251,113,133,.07)}
+  .fb .txt{font-size:13.5px;line-height:1.65;color:#d3ddf4;max-width:680px}
+  .fb .txt b{color:var(--mint)}
+  .fb.no .txt b{color:var(--coral)}
+  .fb .gain{font-family:var(--math);font-size:20px;color:var(--amber);white-space:nowrap}
+  .g-foot{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 28px;border-top:1px solid rgba(255,255,255,.07);font-size:11px;color:rgba(158,171,201,.7);letter-spacing:.04em;flex:0 0 auto}
+  .dotline{display:flex;gap:5px}
+  .dotline i{width:14px;height:4px;border-radius:99px;background:rgba(255,255,255,.12)}
+  .dotline i.on{background:var(--mint)}
+  .dotline i.bad{background:var(--coral)}
+  /* 結果 */
+  .result{width:100%;max-width:980px;margin:auto;padding:8px 0;text-align:center}
+  .medal{position:relative;width:132px;height:132px;margin:0 auto 6px}
+  .medal svg{width:100%;height:100%;filter:drop-shadow(0 14px 30px rgba(252,211,77,.25))}
+  .rank{font-size:38px;font-weight:900;letter-spacing:.02em;margin:2px 0 4px;background:linear-gradient(100deg,var(--amber),#fff,var(--mint));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .rank-sub{font-size:14px;color:var(--muted);line-height:1.6}
+  .stars{display:flex;justify-content:center;gap:8px;margin:12px 0 16px;font-size:30px;color:rgba(255,255,255,.14)}
+  .stars .on{color:var(--amber);filter:drop-shadow(0 0 10px rgba(252,211,77,.6))}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 auto 16px;max-width:760px}
+  .stat{padding:13px 10px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.045)}
+  .stat span{display:block;font-size:10.5px;letter-spacing:.1em;color:var(--muted);margin-bottom:4px}
+  .stat b{font-family:var(--math);font-size:24px;color:var(--ink)}
+  .stat b.amber{color:var(--amber)}
+  .review{max-width:860px;max-height:150px;overflow:auto;margin:0 auto 16px;text-align:left;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03)}
+  .review-row{display:flex;gap:10px;align-items:flex-start;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.06);font-size:12.5px;line-height:1.5}
+  .review-row:last-child{border-bottom:0}
+  .review-row .st{flex:0 0 20px;height:20px;border-radius:6px;display:grid;place-items:center;font-size:11px;font-weight:900;background:rgba(52,211,153,.16);color:var(--green)}
+  .review-row.bad .st{background:rgba(251,113,133,.16);color:var(--coral)}
+  .review-row .rq{flex:1;color:#dbe4fa;font-family:var(--math)}
+  .review-row .ra{color:var(--muted);white-space:nowrap;font-family:var(--math)}
+  .result-btns{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+  .confetti{position:fixed;inset:0;pointer-events:none;z-index:260;overflow:hidden}
+  .confetti i{position:absolute;top:-20px;width:9px;height:14px;border-radius:2px;animation:fall linear forwards}
+  @keyframes fall{to{transform:translate3d(var(--dx),105vh,0) rotate(720deg);opacity:.9}}
+  @media (max-width:760px){
+    .g-head{padding:12px 14px;gap:8px;align-items:flex-start}
+    .g-brand{display:none}
+    .hud{padding:5px 8px;font-size:11px}.hud .lbl{display:none}
+    .g-main{padding:14px}
+    .q-card{padding:20px 16px;border-radius:20px}
+    .q-text{font-size:30px;padding-bottom:16px}.q-text.small{font-size:22px}
+    .opts{grid-template-columns:1fr}.opt{font-size:19px}
+    .stats{grid-template-columns:1fr 1fr}
+    .rank{font-size:30px}
+    .g-foot{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation-duration:.001s!important;transition-duration:.001s!important}}
+</style>
+</head>
+<body>
+<div id="stageWrap">
+  <div id="stage">
+    <div class="progress"><i id="progress"></i></div>
+    <header class="topbar">
+      <div class="brand"><span class="mark">∑</span> MATH QUEST <em>｜國中數學・四則運算</em></div>
+      <div class="tools">
+        <button class="ico-btn" id="soundBtn" title="音效開關 (M)" aria-label="音效開關">♪</button>
+        <button class="ico-btn" id="fsBtn" title="全螢幕 (F)" aria-label="全螢幕">⛶</button>
+      </div>
+    </header>
+
+    <!-- 01 封面 -->
+    <section class="slide cover active" data-title="封面" style="--a:#5eead4">
+      <div class="cover-wrap">
+        <div class="cover-copy">
+          <div class="kicker anim d1">國中數學・七年級・整數單元</div>
+          <h1 class="anim d2">四則運算<span>數學勇者的試煉</span></h1>
+          <p class="lead anim d3">從數線到括號，從符號規則到分配律。每一次計算，都是一次判斷；每一次驗算，都是一次負責。</p>
+          <div class="tagrow anim d3">
+            <span class="tag"><b>＋</b> 正負數</span>
+            <span class="tag"><b>×</b> 運算順序</span>
+            <span class="tag"><b>÷</b> 分配律</span>
+            <span class="tag"><b>★</b> 遊戲式評量</span>
+          </div>
+          <div class="cover-cta anim d4">
+            <button class="btn" data-go="1">開始探索 <span>→</span></button>
+            <button class="btn ghost" id="coverChallenge">直接挑戰 ⚔</button>
+          </div>
+          <div class="cover-meta anim d5"><span>13 個學習頁面</span><i></i><span>12 道試煉關卡</span><i></i><span>離線可用</span></div>
+        </div>
+        <div class="cover-art anim d3">
+          <svg viewBox="0 0 520 470" role="img" aria-label="數學勇者獎盃與四則運算符號插圖">
+            <defs>
+              <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fde68a"/><stop offset="1" stop-color="#f59e0b"/></linearGradient>
+              <linearGradient id="mintg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5eead4"/><stop offset="1" stop-color="#38bdf8"/></linearGradient>
+              <linearGradient id="vio" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a78bfa"/><stop offset="1" stop-color="#f472b6"/></linearGradient>
+              <radialGradient id="halo" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#5eead4" stop-opacity=".28"/><stop offset="1" stop-color="#5eead4" stop-opacity="0"/></radialGradient>
+            </defs>
+            <circle cx="260" cy="225" r="205" fill="url(#halo)"/>
+            <circle cx="260" cy="225" r="168" fill="none" stroke="rgba(255,255,255,.12)" stroke-dasharray="3 10"/>
+            <circle cx="260" cy="225" r="128" fill="none" stroke="rgba(255,255,255,.07)"/>
+            <g class="float-a">
+              <rect x="70" y="120" width="62" height="62" rx="18" fill="rgba(94,234,212,.12)" stroke="rgba(94,234,212,.4)"/>
+              <text x="101" y="163" text-anchor="middle" font-family="Cambria Math,serif" font-size="34" fill="#5eead4">＋</text>
+            </g>
+            <g class="float-b">
+              <rect x="388" y="118" width="62" height="62" rx="18" fill="rgba(251,113,133,.1)" stroke="rgba(251,113,133,.38)"/>
+              <text x="419" y="161" text-anchor="middle" font-family="Cambria Math,serif" font-size="34" fill="#fb7185">−</text>
+            </g>
+            <g class="float-b">
+              <rect x="78" y="288" width="62" height="62" rx="18" fill="rgba(167,139,250,.12)" stroke="rgba(167,139,250,.4)"/>
+              <text x="109" y="331" text-anchor="middle" font-family="Cambria Math,serif" font-size="32" fill="#a78bfa">×</text>
+            </g>
+            <g class="float-a">
+              <rect x="382" y="292" width="62" height="62" rx="18" fill="rgba(252,211,77,.1)" stroke="rgba(252,211,77,.38)"/>
+              <text x="413" y="335" text-anchor="middle" font-family="Cambria Math,serif" font-size="32" fill="#fcd34d">÷</text>
+            </g>
+            <g>
+              <path d="M206 142h108v48c0 45-24 74-54 74s-54-29-54-74z" fill="url(#gold)"/>
+              <path d="M206 154h-34a34 34 0 0 0 36 35" fill="none" stroke="url(#gold)" stroke-width="9" stroke-linecap="round"/>
+              <path d="M314 154h34a34 34 0 0 1-36 35" fill="none" stroke="url(#gold)" stroke-width="9" stroke-linecap="round"/>
+              <rect x="248" y="260" width="24" height="26" fill="#f59e0b"/>
+              <path d="M214 314h92l14 24H200z" fill="url(#gold)"/>
+              <rect x="196" y="336" width="128" height="12" rx="6" fill="#b45309" opacity=".65"/>
+              <circle cx="260" cy="196" r="25" fill="#0b1026" stroke="rgba(255,255,255,.25)" stroke-width="2"/>
+              <text x="260" y="209" text-anchor="middle" font-family="Cambria Math,serif" font-size="30" font-weight="bold" fill="#fcd34d">×</text>
+            </g>
+            <g fill="#fcd34d">
+              <path d="M145 76l4 12 12 4-12 4-4 12-4-12-12-4 12-4z" opacity=".9"/>
+              <path d="M370 60l3 9 9 3-9 3-3 9-3-9-9-3 9-3z" opacity=".65"/>
+              <path d="M146 372l4 11 11 4-11 4-4 11-4-11-11-4 11-4z" opacity=".5"/>
+            </g>
+            <g>
+              <rect x="152" y="386" width="216" height="46" rx="14" fill="rgba(255,255,255,.055)" stroke="rgba(255,255,255,.14)"/>
+              <text x="260" y="415" text-anchor="middle" font-family="Cambria Math,serif" font-size="18" fill="#dbe4fa">(−6) + 4 × (−3) = −18</text>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 學習地圖 -->
+    <section class="slide" data-title="學習地圖" style="--a:#5eead4">
+      <div class="slide-head">
+        <div class="kicker">學習地圖</div>
+        <h2>今天的<span class="hl">四個冒險</span></h2>
+        <p class="sub">先建立規則，再拆解順序，最後把能力帶進生活與遊戲。</p>
+      </div>
+      <div class="body">
+        <div class="grid2">
+          <div class="card anim d1"><div class="num">QUEST 01</div><h3>正負數與數線</h3><p>用「方向」與「距離」理解正負數，讓抽象符號變成看得見的移動。</p></div>
+          <div class="card anim d2"><div class="num">QUEST 02</div><h3>加減乘除的符號</h3><p>先判斷符號，再計算絕對值。建立一套每次都能重複使用的判斷流程。</p></div>
+          <div class="card anim d3"><div class="num">QUEST 03</div><h3>運算順序</h3><p>括號 → 乘方 → 乘除 → 加減；同級運算由左而右，不憑感覺跳步。</p></div>
+          <div class="card anim d4"><div class="num">QUEST 04</div><h3>分配律與應用</h3><p>把大數字拆成好算的組合，用結構化的方法解決生活情境題。</p></div>
+        </div>
+        <div class="notebar anim d5">
+          <p><b>最終試煉：</b>12 道題目、3 個關卡、3 顆心。答題後立即解析，結束後取得你的勇者徽章。</p>
+          <button class="btn sm amber" data-go="10">查看規則 →</button>
+        </div>
+      </div>
+      <span class="pagenum">02</span>
+    </section>
+    <!-- 03 暖身 -->
+    <section class="slide" data-title="生活暖身" style="--a:#fcd34d">
+      <div class="slide-head">
+        <div class="kicker">暖身任務</div>
+        <h2>數學，藏在<span class="hl">生活裡</span></h2>
+        <p class="sub">先不要急著算。問自己：發生了什麼？數量怎麼變？該用哪個運算？</p>
+      </div>
+      <div class="body">
+        <div class="grid3">
+          <div class="scenario card anim d1">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fcd34d" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1.2 11H6.2z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/><path d="M9.5 12.5h5"/><path d="M12 10v5"/></svg></div>
+            <h3>福利社找零</h3>
+            <p>一包餅乾 25 元，買 3 包，付 100 元。</p>
+            <div class="ans"><small>算式與答案</small>100 − 25 × 3 = 25</div>
+          </div>
+          <div class="scenario card anim d2">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="#5eead4" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h3M13 11h3"/><path d="M12 21v-3"/><path d="M9 18l3-2 3 2"/></svg></div>
+            <h3>電梯樓層</h3>
+            <p>從 5 樓搭到地下 2 樓，一共下降幾層？</p>
+            <div class="ans"><small>算式與答案</small>5 − (−2) = 7</div>
+          </div>
+          <div class="scenario card anim d3">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fb7185" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4a2 2 0 0 1 4 0v7h1.5a3.5 3.5 0 0 1 0 7H10a5 5 0 0 1-5-5V9a2 2 0 0 1 4 0v3"/><circle cx="17" cy="17" r="4" fill="#070b18"/><path d="M17 15v2l1.4 1"/></svg></div>
+            <h3>氣溫變化</h3>
+            <p>清晨 −3°C，中午上升 8°C，中午幾度？</p>
+            <div class="ans"><small>算式與答案</small>−3 + 8 = 5°C</div>
+          </div>
+        </div>
+        <div class="notebar anim d4" id="warmReveal">
+          <p>三個情境的共同點是什麼？<b>都是先判斷「變化方向」，再用算式把變化記錄下來。</b></p>
+          <button class="reveal-btn" data-reveal="warmReveal">看關鍵 →</button>
+        </div>
+        <div class="reveal" style="margin-top:10px">數學不是把數字丟進機器，而是把情境翻譯成「方向、數量、關係」，再做出可檢查的判斷。</div>
+      </div>
+      <span class="pagenum">03</span>
+    </section>
+
+    <!-- 04 數線 -->
+    <section class="slide" data-title="數線與正負數" style="--a:#60a5fa">
+      <div class="slide-head">
+        <div class="kicker">QUEST 01</div>
+        <h2>數線，是<span class="hl">方向的地圖</span></h2>
+        <p class="sub">正數向右、負數向左。加法是移動，減法是「往相反方向移動」。</p>
+      </div>
+      <div class="body">
+        <div class="grid2" style="grid-template-columns:1.12fr .88fr;align-items:start">
+          <div class="card anim d1" style="padding:18px 22px">
+            <svg class="numberline" viewBox="0 0 660 232" role="img" aria-label="從負三到五的數線移動示意圖">
+              <defs>
+                <linearGradient id="nlarrow" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5eead4"/><stop offset="1" stop-color="#60a5fa"/></linearGradient>
+              </defs>
+              <line x1="34" y1="126" x2="626" y2="126" stroke="rgba(255,255,255,.35)" stroke-width="2"/>
+              <path d="M626 126l-12-5v10z" fill="rgba(255,255,255,.55)"/>
+              <g stroke="rgba(255,255,255,.35)" stroke-width="1.5">
+                <line x1="34" y1="119" x2="34" y2="133"/><line x1="62" y1="122" x2="62" y2="130"/><line x1="90" y1="119" x2="90" y2="133"/><line x1="118" y1="122" x2="118" y2="130"/><line x1="146" y1="119" x2="146" y2="133"/><line x1="174" y1="122" x2="174" y2="130"/><line x1="202" y1="119" x2="202" y2="133"/><line x1="230" y1="122" x2="230" y2="130"/><line x1="258" y1="119" x2="258" y2="133"/><line x1="286" y1="122" x2="286" y2="130"/><line x1="314" y1="119" x2="314" y2="133"/><line x1="342" y1="122" x2="342" y2="130"/><line x1="370" y1="119" x2="370" y2="133"/><line x1="398" y1="122" x2="398" y2="130"/><line x1="426" y1="119" x2="426" y2="133"/><line x1="454" y1="122" x2="454" y2="130"/><line x1="482" y1="119" x2="482" y2="133"/><line x1="510" y1="122" x2="510" y2="130"/><line x1="538" y1="119" x2="538" y2="133"/><line x1="566" y1="122" x2="566" y2="130"/><line x1="594" y1="119" x2="594" y2="133"/>
+              </g>
+              <g font-family="Cambria Math,serif" font-size="14" fill="#9eabc9" text-anchor="middle">
+                <text x="34" y="156">−10</text><text x="90" y="156">−8</text><text x="146" y="156">−6</text><text x="202" y="156">−4</text><text x="258" y="156">−2</text><text x="314" y="156">0</text><text x="370" y="156">2</text><text x="426" y="156">4</text><text x="482" y="156">6</text><text x="538" y="156">8</text><text x="594" y="156">10</text>
+              </g>
+              <path d="M230 126 C 280 52, 400 52, 454 126" fill="none" stroke="url(#nlarrow)" stroke-width="3.5" stroke-linecap="round"/>
+              <path d="M454 126l-2-13-10 8z" fill="#60a5fa"/>
+              <circle cx="230" cy="126" r="8" fill="#5eead4" stroke="#070b18" stroke-width="3"/>
+              <circle cx="454" cy="126" r="8" fill="#60a5fa" stroke="#070b18" stroke-width="3"/>
+              <text x="230" y="108" text-anchor="middle" font-family="Cambria Math,serif" font-size="19" fill="#5eead4">−3</text>
+              <text x="454" y="108" text-anchor="middle" font-family="Cambria Math,serif" font-size="19" fill="#60a5fa">5</text>
+              <text x="356" y="50" text-anchor="middle" font-family="Microsoft JhengHei,sans-serif" font-size="14" fill="#dbe4fa">向右移動 8 格</text>
+              <text x="330" y="196" text-anchor="middle" font-family="Cambria Math,serif" font-size="22" fill="#dbe4fa">5 − (−3) = 8</text>
+            </svg>
+            <div class="checkline"><span class="ck">✓</span> 減去負數，等於往右移動：兩個負號抵消成加號。</div>
+          </div>
+          <div class="anim d2">
+            <div class="rule-card"><div class="rt">相反數</div><p><span class="expr">a</span> 與 <span class="expr">−a</span> 在數線上與 0 等距、方向相反。例如 5 與 −5。</p></div>
+            <div class="rule-card"><div class="rt">絕對值｜a｜</div><p>只看「離 0 多遠」，不看方向。所以 <span class="expr">｜−7｜ = 7</span>，<span class="expr">｜7｜ = 7</span>。</p></div>
+            <div class="rule-card"><div class="rt">比較大小</div><p>數線上愈右邊的數愈大。因此 <span class="expr">−2 &gt; −6</span>，雖然 6 比 2 大。</p></div>
+            <div class="formula-strip" style="font-size:20px">同號相加 · 異號相減</div>
+          </div>
+        </div>
+      </div>
+      <span class="pagenum">04</span>
+    </section>
+
+    <!-- 05 加減法 -->
+    <section class="slide" data-title="加減法規則" style="--a:#5eead4">
+      <div class="slide-head">
+        <div class="kicker">QUEST 02 · PART 1</div>
+        <h2>加減法：<span class="hl">先看符號，再算大小</span></h2>
+        <p class="sub">把「減法」改寫成「加上相反數」，所有題目都能用同一套規則判斷。</p>
+      </div>
+      <div class="body">
+        <div class="grid2" style="grid-template-columns:1.05fr .95fr">
+          <div class="card anim d1" style="padding:12px 20px">
+            <div class="example-row"><span class="ex">(−6) + 4</span><span class="why"><b style="color:#5eead4">異號</b>：取絕對值大的符號（負），<br>6 − 4 = 2 → <b style="color:#f2f5ff">−2</b></span></div>
+            <div class="example-row"><span class="ex">(−6) − 4</span><span class="why">減 4 = 加 (−4)，<b style="color:#5eead4">同號</b>相加：<br>−(6 + 4) → <b style="color:#f2f5ff">−10</b></span></div>
+            <div class="example-row"><span class="ex">5 − (−3)</span><span class="why">減去負 3 = 加 3，<b style="color:#5eead4">負負得加</b>：<br>5 + 3 → <b style="color:#f2f5ff">8</b></span></div>
+            <div class="example-row"><span class="ex">(−2) + (−9)</span><span class="why"><b style="color:#5eead4">同號</b>：保留負號，絕對值相加：<br>−(2 + 9) → <b style="color:#f2f5ff">−11</b></span></div>
+          </div>
+          <div class="anim d2">
+            <div class="formula-strip" style="flex-direction:column;gap:6px;align-items:flex-start;padding:20px">
+              <span style="font-size:13px;font-family:var(--sans);color:var(--muted);letter-spacing:.08em">核心改寫</span>
+              <span>a − b = a + (−b)</span>
+            </div>
+            <div class="rule-card" style="margin-top:14px"><div class="rt">同號相加</div><p>保留共同符號，絕對值相加。<br><span class="expr" style="color:#5eead4">(−3) + (−5) = −8</span></p></div>
+            <div class="rule-card"><div class="rt">異號相加</div><p>取絕對值較大者的符號，絕對值相減。<br><span class="expr" style="color:#5eead4">(−8) + 3 = −5</span></p></div>
+            <div class="notebar" style="margin-top:14px;display:block">
+              <p><b>口訣不是理由：</b>「負負得正」之所以成立，是因為減去一個負數，等於往數線右邊移動。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <span class="pagenum">05</span>
+    </section>
+
+    <!-- 06 乘除法 -->
+    <section class="slide" data-title="乘除法規則" style="--a:#fb7185">
+      <div class="slide-head">
+        <div class="kicker">QUEST 02 · PART 2</div>
+        <h2>乘除法：<span class="hl">符號先決，絕對值再算</span></h2>
+        <p class="sub">先把「正或負」決定好，再把數字相乘或相除。兩步驟，不容易亂。</p>
+      </div>
+      <div class="body">
+        <div class="grid2" style="grid-template-columns:.9fr 1.1fr;align-items:start">
+          <div class="card anim d1">
+            <div class="rt" style="font-size:13px;font-weight:800;color:var(--coral);letter-spacing:.08em;margin-bottom:12px">符號判斷表</div>
+            <table class="sign-table">
+              <tr><th></th><th>正數</th><th>負數</th></tr>
+              <tr><th>正數</th><td class="pos">＋</td><td class="neg">−</td></tr>
+              <tr><th>負數</th><td class="neg">−</td><td class="pos">＋</td></tr>
+            </table>
+            <p style="font-size:13.5px;line-height:1.7;color:#c7d2e9;margin-top:12px"><b style="color:var(--coral)">同號得正、異號得負。</b>乘法和除法的符號規則完全相同。</p>
+          </div>
+          <div class="anim d2">
+            <div class="card" style="padding:14px 20px;margin-bottom:12px">
+              <div class="example-row"><span class="ex">(−4) × (−6)</span><span class="why">同號 → 正；4 × 6 = 24 → <b style="color:#34d399">24</b></span></div>
+              <div class="example-row"><span class="ex">(−36) ÷ 9</span><span class="why">異號 → 負；36 ÷ 9 = 4 → <b style="color:#fb7185">−4</b></span></div>
+              <div class="example-row"><span class="ex">(−2)³</span><span class="why">三個負數相乘，負號有奇數個 → <b style="color:#fb7185">−8</b></span></div>
+            </div>
+            <div class="grid2" style="gap:10px">
+              <div class="rule-card" style="margin:0"><div class="rt">0 的規則</div><p><span class="expr">0 ÷ a = 0</span>（a ≠ 0）；但 <span class="expr">a ÷ 0</span> <b style="color:var(--coral)">無意義</b>，因為找不到一個數乘以 0 會等於 a。</p></div>
+              <div class="rule-card" style="margin:0"><div class="rt">次方看奇偶</div><p>負數的偶數次方為正、奇數次方為負。<br><span class="expr">(−3)² = 9</span>、<span class="expr">(−3)³ = −27</span></p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <span class="pagenum">06</span>
+    </section>
+    <!-- 07 運算順序 -->
+    <section class="slide" data-title="運算順序" style="--a:#a78bfa">
+      <div class="slide-head">
+        <div class="kicker">QUEST 03</div>
+        <h2>運算順序：<span class="hl">誰先上場？</span></h2>
+        <p class="sub">不是「從左看到右」就好。先處理括號，再處理乘方，最後才輪到加減。</p>
+      </div>
+      <div class="body">
+        <div class="pipe anim d1" style="margin-bottom:16px">
+          <div class="pipe-step"><div class="pn">1</div><b>括號</b><span>由內而外</span></div><div class="pipe-arrow">›</div>
+          <div class="pipe-step"><div class="pn">2</div><b>乘方</b><span>次方優先</span></div><div class="pipe-arrow">›</div>
+          <div class="pipe-step"><div class="pn">3</div><b>乘除</b><span>由左而右</span></div><div class="pipe-arrow">›</div>
+          <div class="pipe-step"><div class="pn">4</div><b>加減</b><span>由左而右</span></div>
+        </div>
+        <div class="grid2" style="grid-template-columns:1.15fr .85fr;align-items:start">
+          <div class="card anim d2" style="padding:16px 20px" id="stepDemo">
+            <div class="step-box on" data-step="0"><div class="sn">STEP 0 · 原式</div><div class="se">12 − 3 × (4 + 2)</div><div class="sd">先找括號，再找乘除，最後才是加減。</div></div>
+            <div class="step-box" data-step="1"><div class="sn">STEP 1 · 括號</div><div class="se">12 − 3 × <span style="color:#a78bfa">6</span></div><div class="sd">4 + 2 = 6</div></div>
+            <div class="step-box" data-step="2"><div class="sn">STEP 2 · 乘法</div><div class="se">12 − <span style="color:#a78bfa">18</span></div><div class="sd">3 × 6 = 18</div></div>
+            <div class="step-box" data-step="3"><div class="sn">STEP 3 · 減法</div><div class="se" style="color:#5eead4">= −6</div><div class="sd">12 − 18 = −6，完成。</div></div>
+            <div style="display:flex;gap:8px;margin-top:12px">
+              <button class="btn sm" id="stepNext">下一步 →</button>
+              <button class="btn sm ghost" id="stepReset">重設</button>
+            </div>
+          </div>
+          <div class="anim d3">
+            <div class="rule-card" style="border-color:rgba(251,113,133,.3);background:rgba(251,113,133,.06)"><div class="rt" style="color:var(--coral)">最常見的錯</div><p><span class="expr" style="font-size:19px">6 ÷ 2 × 3</span><br>不是 6 ÷ 6 = 1，而是由左而右：<br><b style="color:#f2f5ff">3 × 3 = 9</b></p></div>
+            <div class="rule-card"><div class="rt">同級運算</div><p>乘與除同一級、加與減同一級。沒有括號時，<b style="color:#f2f5ff">由左而右</b>依序計算。</p></div>
+            <div class="rule-card"><div class="rt">括號裡也有順序</div><p>先算小括號 ( )，再算中括號 [ ]。像剝洋蔥，一層一層往內。</p></div>
+          </div>
+        </div>
+      </div>
+      <span class="pagenum">07</span>
+    </section>
+
+    <!-- 08 分配律 -->
+    <section class="slide" data-title="分配律" style="--a:#fcd34d">
+      <div class="slide-head">
+        <div class="kicker">QUEST 04</div>
+        <h2>分配律：<span class="hl">把難題拆小</span></h2>
+        <p class="sub">同一個總面積，可以用兩種方式算。拆開，是為了讓計算變簡單，也讓結構被看見。</p>
+      </div>
+      <div class="body">
+        <div class="grid2" style="grid-template-columns:1fr 1fr;align-items:start">
+          <div class="card anim d1" style="padding:18px 20px">
+            <svg viewBox="0 0 520 250" style="width:100%;height:auto" role="img" aria-label="分配律面積模型">
+              <rect x="60" y="52" width="400" height="140" rx="8" fill="rgba(252,211,77,.06)" stroke="rgba(252,211,77,.3)"/>
+              <rect x="60" y="52" width="250" height="140" fill="rgba(94,234,212,.1)" stroke="rgba(94,234,212,.35)"/>
+              <rect x="310" y="52" width="150" height="140" fill="rgba(167,139,250,.1)" stroke="rgba(167,139,250,.35)"/>
+              <text x="185" y="128" text-anchor="middle" font-family="Cambria Math,serif" font-size="30" fill="#5eead4">ab</text>
+              <text x="385" y="128" text-anchor="middle" font-family="Cambria Math,serif" font-size="30" fill="#a78bfa">ac</text>
+              <text x="185" y="38" text-anchor="middle" font-family="Cambria Math,serif" font-size="20" fill="#dbe4fa">b</text>
+              <text x="385" y="38" text-anchor="middle" font-family="Cambria Math,serif" font-size="20" fill="#dbe4fa">c</text>
+              <text x="40" y="128" text-anchor="middle" font-family="Cambria Math,serif" font-size="20" fill="#dbe4fa">a</text>
+              <line x1="310" y1="52" x2="310" y2="192" stroke="rgba(255,255,255,.3)" stroke-dasharray="4 4"/>
+              <text x="260" y="228" text-anchor="middle" font-family="Cambria Math,serif" font-size="22" fill="#fcd34d">a(b + c) = ab + ac</text>
+            </svg>
+          </div>
+          <div class="anim d2">
+            <div class="rule-card"><div class="rt">例題 A · 拆成整數</div><p><span class="expr" style="font-size:18px;color:#f2f5ff">−4 × (25 − 7)</span><br>= (−4) × 25 + (−4) × (−7)<br>= −100 + 28 = <b style="color:#fcd34d">−72</b></p></div>
+            <div class="rule-card"><div class="rt">例題 B · 補數法</div><p><span class="expr" style="font-size:18px;color:#f2f5ff">99 × (−7)</span><br>= (100 − 1) × (−7)<br>= −700 + 7 = <b style="color:#fcd34d">−693</b></p></div>
+            <div class="rule-card" style="border-color:rgba(251,113,133,.3);background:rgba(251,113,133,.055)"><div class="rt" style="color:var(--coral)">別漏掉符號</div><p>括號前的負號要分配給「每一項」。<br><span class="expr">−3(x − 4) = −3x + 12</span>，不是 −3x − 12。</p></div>
+          </div>
+        </div>
+      </div>
+      <span class="pagenum">08</span>
+    </section>
+
+    <!-- 09 易錯陷阱 -->
+    <section class="slide" data-title="易錯陷阱" style="--a:#fb7185">
+      <div class="slide-head">
+        <div class="kicker">除錯任務</div>
+        <h2>四個最容易<span class="hl">失分的陷阱</span></h2>
+        <p class="sub">先別看答案。點一下卡片，檢查你的判斷是否正確。</p>
+      </div>
+      <div class="body">
+        <div class="grid2" style="gap:14px">
+          <button class="flip anim d1" aria-label="陷阱一，點擊看答案"><div class="flip-inner">
+            <div class="flip-face flip-front"><span class="warn">TRAP 01</span><div class="q">−3² = ?</div><div class="hint">點擊揭曉</div></div>
+            <div class="flip-face flip-back"><div class="ans">−9</div><div class="why">乘方只作用在 3：−3² = −(3²) = −9。若要表示 (−3) 的平方，必須加括號：<b>(−3)² = 9</b>。</div></div>
+          </div></button>
+          <button class="flip anim d2" aria-label="陷阱二，點擊看答案"><div class="flip-inner">
+            <div class="flip-face flip-front"><span class="warn">TRAP 02</span><div class="q">6 ÷ 2 × 3 = ?</div><div class="hint">點擊揭曉</div></div>
+            <div class="flip-face flip-back"><div class="ans">9</div><div class="why">乘除同級，由左而右：6 ÷ 2 = 3，3 × 3 = 9。不是先算 2 × 3。</div></div>
+          </div></button>
+          <button class="flip anim d3" aria-label="陷阱三，點擊看答案"><div class="flip-inner">
+            <div class="flip-face flip-front"><span class="warn">TRAP 03</span><div class="q">−5 − (−3) = ?</div><div class="hint">點擊揭曉</div></div>
+            <div class="flip-face flip-back"><div class="ans">−2</div><div class="why">減去負 3 等於加 3：−5 + 3 = −2。兩個負號相遇會變成加號。</div></div>
+          </div></button>
+          <button class="flip anim d4" aria-label="陷阱四，點擊看答案"><div class="flip-inner">
+            <div class="flip-face flip-front"><span class="warn">TRAP 04</span><div class="q">−7 ÷ 0 = ?</div><div class="hint">點擊揭曉</div></div>
+            <div class="flip-face flip-back"><div class="ans">無意義</div><div class="why">0 不能當除數。因為找不到任何數 × 0 會等於 −7；但 0 ÷ (−7) = 0 是合法的。</div></div>
+          </div></button>
+        </div>
+      </div>
+      <span class="pagenum">09</span>
+    </section>
+    <!-- 10 解題策略 -->
+    <section class="slide" data-title="解題策略" style="--a:#60a5fa">
+      <div class="slide-head">
+        <div class="kicker">應用任務</div>
+        <h2>解題四步驟：<span class="hl">讀、圈、列、驗</span></h2>
+        <p class="sub">算式不是一開始就出現的。先把文字轉成關係，再讓數字進場。</p>
+      </div>
+      <div class="body">
+        <div class="work anim d1" style="margin-bottom:14px">
+          <div class="qbox"><b>題目｜登山情境</b><br>登山口海拔 120 公尺。小安先上升 85 公尺，再下降 140 公尺，最後的海拔是多少公尺？</div>
+          <div class="qbox"><b>想一想｜哪些字是線索？</b><br>「上升」代表 <span class="expr" style="color:#5eead4">＋85</span>；「下降」代表 <span class="expr" style="color:#fb7185">−140</span>。起點是 120。</div>
+        </div>
+        <div class="steps4 anim d2" style="margin-bottom:12px">
+          <div class="s"><div class="n">1</div><b>讀</b><span>讀完整題，確認起點與變化</span></div>
+          <div class="s"><div class="n">2</div><b>圈</b><span>圈出上升、下降等關鍵詞</span></div>
+          <div class="s"><div class="n">3</div><b>列</b><span>把關鍵詞翻成＋、−與括號</span></div>
+          <div class="s"><div class="n">4</div><b>驗</b><span>檢查符號、順序與答案合理性</span></div>
+        </div>
+        <div class="final anim d3">
+          <div><div style="font-size:11.5px;letter-spacing:.1em;color:var(--muted);margin-bottom:4px">列式與計算</div><div class="fx">120 + 85 − 140 = 65</div></div>
+          <div style="text-align:right"><div style="font-size:11.5px;letter-spacing:.1em;color:var(--muted);margin-bottom:4px">答案</div><div style="font-size:24px;font-weight:900;color:var(--amber)">65 公尺</div></div>
+          <div style="max-width:300px;font-size:12.5px;line-height:1.55;color:#c7d2e9"><b style="color:#5eead4">合理性檢查：</b>先上升到 205，再下降到 65；65 比 120 低，符合「下降比上升多」。</div>
+        </div>
+      </div>
+      <span class="pagenum">10</span>
+    </section>
+
+    <!-- 11 遊戲規則 -->
+    <section class="slide" data-title="試煉規則" style="--a:#fcd34d">
+      <div class="slide-head">
+        <div class="kicker">最終試煉</div>
+        <h2>四則運算<span class="hl">勇者試煉</span></h2>
+        <p class="sub">12 道題、3 個關卡。答題後立即解析；結束後，看看你拿到哪一枚徽章。</p>
+      </div>
+      <div class="body">
+        <div class="grid2" style="grid-template-columns:1.08fr .92fr;align-items:start">
+          <div class="game-rules anim d1">
+            <div class="gr"><div class="gi">12</div><div><b>三關共 12 題</b><span>暖身 4 題、進階 4 題、魔王 4 題，難度逐步升高。</span></div></div>
+            <div class="gr"><div class="gi">♥3</div><div><b>三顆心</b><span>答錯或超時扣一顆心；三顆心用完，試煉提前結束。</span></div></div>
+            <div class="gr"><div class="gi">×?</div><div><b>連擊加成</b><span>連續答對可提高得分倍率，最高 ×2。答錯則連擊歸零。</span></div></div>
+            <div class="gr"><div class="gi">⏱</div><div><b>限時作答</b><span>暖身 30 秒、進階 25 秒、魔王 20 秒；練習模式不計時。</span></div></div>
+            <div class="gr"><div class="gi">★</div><div><b>徽章與解析</b><span>依正確率獲得星等與稱號，並可逐題回顧錯誤。</span></div></div>
+          </div>
+          <div class="card anim d2" style="text-align:center;padding:28px 24px">
+            <svg viewBox="0 0 220 220" style="width:160px;height:160px;margin:0 auto;display:block" role="img" aria-label="勇者徽章">
+              <defs><linearGradient id="badgeg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fde68a"/><stop offset="1" stop-color="#f59e0b"/></linearGradient></defs>
+              <circle cx="110" cy="110" r="94" fill="rgba(252,211,77,.08)" stroke="rgba(252,211,77,.2)"/>
+              <path d="M110 26l58 33v66l-58 33-58-33V59z" fill="url(#badgeg)"/>
+              <path d="M110 42l45 26v54l-45 26-45-26V68z" fill="#0b1026"/>
+              <path d="M110 66l12 25 27 4-20 19 5 27-24-13-24 13 5-27-20-19 27-4z" fill="url(#badgeg)"/>
+              <text x="110" y="168" text-anchor="middle" font-family="Cambria Math,serif" font-size="15" fill="#fcd34d">MATH QUEST</text>
+            </svg>
+            <div style="font-size:22px;font-weight:900;margin-top:10px">你的稱號，由正確率決定</div>
+            <div style="font-size:13px;color:var(--muted);margin-top:6px">大師 · 勇者 · 魔法師 · 持續修煉中</div>
+            <div class="best">最佳紀錄 <b id="bestScore">0</b> XP</div>
+            <div style="display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap">
+              <button class="btn amber" id="startTimed">開始試煉 ⚔</button>
+              <button class="btn ghost" id="startPractice">練習模式</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <span class="pagenum">11</span>
+    </section>
+
+    <!-- 12 統整 -->
+    <section class="slide" data-title="運算地圖" style="--a:#5eead4">
+      <div class="slide-head">
+        <div class="kicker">帶走這一頁</div>
+        <h2>你的<span class="hl">運算地圖</span></h2>
+        <p class="sub">遇到任何算式，先跑一次這四個檢查點；比死背答案更可靠。</p>
+      </div>
+      <div class="body">
+        <div class="summary anim d1">
+          <div class="sum"><div class="si">±</div><div><b>1. 先判斷符號</b><p>同號得正、異號得負；加減法先改寫成「加上相反數」。</p></div></div>
+          <div class="sum"><div class="si">( )</div><div><b>2. 再找括號</b><p>由內而外，先小括號再中括號；括號前有負號要分配。</p></div></div>
+          <div class="sum"><div class="si">×÷</div><div><b>3. 乘除優先</b><p>乘方先於乘除；乘除同級時，由左而右，不跳步。</p></div></div>
+          <div class="sum"><div class="si">+−</div><div><b>4. 最後加減</b><p>加減同級由左而右；算完用估算與情境檢查合理性。</p></div></div>
+        </div>
+        <div class="notebar anim d2" style="margin-top:14px">
+          <p><b>自我檢查三問：</b>符號對嗎？順序對嗎？答案在情境中合理嗎？</p>
+          <button class="btn sm ghost" id="quickChallenge">用一題試試 →</button>
+        </div>
+        <div class="grid3 anim d3" style="margin-top:14px">
+          <div class="card soft" style="padding:15px 18px"><div class="num" style="margin-bottom:4px">TIP 01</div><p style="font-size:12.5px">把減號和後面的負號圈在一起看，能避免「負負得正」用錯地方。</p></div>
+          <div class="card soft" style="padding:15px 18px"><div class="num" style="margin-bottom:4px">TIP 02</div><p style="font-size:12.5px">看到 99、101、25×4 這類數字，先想分配律與湊整，不一定硬算。</p></div>
+          <div class="card soft" style="padding:15px 18px"><div class="num" style="margin-bottom:4px">TIP 03</div><p style="font-size:12.5px">算完先估一估：答案應該比誰大、比誰小？不合理就回頭找錯。</p></div>
+        </div>
+      </div>
+      <span class="pagenum">12</span>
+    </section>
+
+    <!-- 13 結語 -->
+    <section class="slide" data-title="結語" style="--a:#a78bfa">
+      <div class="slide-head">
+        <div class="kicker">學習的下一站</div>
+        <h2>數學不是背答案，<br>是<span class="hl">做出好決定</span></h2>
+      </div>
+      <div class="body">
+        <div class="grid2" style="grid-template-columns:1.12fr .88fr;align-items:center">
+          <div class="anim d1">
+            <p class="quote">每一次列式，都是把混亂變成秩序；<br>每一次驗算，都是對自己思考的<em>負責</em>。</p>
+            <div class="tagrow" style="margin-top:20px">
+              <span class="tag">觀察</span><span class="tag">判斷</span><span class="tag">計算</span><span class="tag">驗證</span><span class="tag">修正</span>
+            </div>
+            <div class="end-actions">
+              <button class="btn" id="endChallenge">再挑戰一次 ⚔</button>
+              <button class="btn ghost" data-go="0">回到開頭</button>
+            </div>
+            <div class="end-note">國中數學・四則運算｜單一 HTML 檔・所有圖形皆為內嵌 SVG・可離線使用</div>
+          </div>
+          <div class="card anim d2" style="padding:24px">
+            <div class="num">FINAL MISSION</div>
+            <h3 style="font-size:22px;margin-bottom:8px">設計一道自己的生活題</h3>
+            <p style="font-size:13.5px;line-height:1.75">找一個包含「兩個以上運算」的情境（例如購物、搭車、溫度、遊戲分數），寫成題目並附上解法，和同學交換挑戰。</p>
+            <div class="checkline"><span class="ck">1</span> 情境合理，數字說得通</div>
+            <div class="checkline"><span class="ck">2</span> 至少用到一種括號或負數</div>
+            <div class="checkline"><span class="ck">3</span> 附上完整算式與驗算</div>
+            <div class="checkline"><span class="ck">4</span> 請同學找一個「陷阱」</div>
+          </div>
+        </div>
+      </div>
+      <span class="pagenum">13</span>
+    </section>
+    <div class="bottom">
+      <div style="font-size:11px;color:rgba(158,171,201,.75);letter-spacing:.1em">← → 切換頁面　F 全螢幕</div>
+      <div class="dots" id="dots" aria-label="頁面導覽"></div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="counter" id="counter">01 / 13</span>
+        <div class="nav-btns">
+          <button class="nav-btn" id="prevBtn" aria-label="上一頁">←</button>
+          <button class="nav-btn" id="nextBtn" aria-label="下一頁">→</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 遊戲覆蓋層 ===== -->
+<div class="game hidden" id="game" role="dialog" aria-modal="true" aria-label="四則運算勇者試煉">
+  <header class="g-head">
+    <div class="g-brand"><span class="mark">∑</span> MATH QUEST <span style="color:var(--muted);font-weight:600">｜最終試煉</span></div>
+    <div class="g-hud">
+      <div class="hud"><span class="lbl">生命</span><div class="hearts" id="hearts"></div></div>
+      <div class="hud combo" id="comboHud"><span class="lbl">連擊</span><b id="comboVal" style="color:var(--mint)">0</b></div>
+      <div class="hud"><span class="lbl">XP</span><b id="scoreVal">0</b></div>
+      <div class="timer-wrap" id="timerWrap">
+        <svg viewBox="0 0 36 36" aria-hidden="true">
+          <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="3"></circle>
+          <circle id="timerRing" cx="18" cy="18" r="15" fill="none" stroke="#5eead4" stroke-width="3" stroke-linecap="round" stroke-dasharray="94.25" stroke-dashoffset="0"></circle>
+        </svg>
+        <span class="tnum" id="timerNum">30</span>
+      </div>
+      <button class="g-close" id="gameClose" aria-label="關閉遊戲">✕</button>
+    </div>
+  </header>
+  <div class="g-progress"><i id="gProgress"></i></div>
+
+  <main class="g-main">
+    <div class="play" id="playArea">
+      <div class="q-meta">
+        <div class="q-left"><span class="lv" id="qLevel">暖身</span><span class="q-index" id="qIndex">第 1 / 12 題</span></div>
+        <span class="q-note" id="qNote">選一個答案</span>
+      </div>
+      <div class="q-card">
+        <div class="q-text" id="qText"></div>
+        <div class="opts" id="opts"></div>
+      </div>
+      <div class="fb" id="fb" aria-live="polite"></div>
+    </div>
+
+    <div class="result hidden" id="result">
+      <div class="medal">
+        <svg viewBox="0 0 140 140" aria-hidden="true">
+          <defs><linearGradient id="mg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fde68a"/><stop offset="1" stop-color="#f59e0b"/></linearGradient></defs>
+          <circle cx="70" cy="70" r="66" fill="rgba(252,211,77,.07)" stroke="rgba(252,211,77,.22)"/>
+          <path d="M70 12l42 24v48l-42 24-42-24V36z" fill="url(#mg)"/>
+          <path d="M70 23l33 19v38L70 99 37 80V42z" fill="#0b1026"/>
+          <path d="M70 40l8 17 19 3-14 13 4 19-17-9-17 9 4-19-14-13 19-3z" fill="url(#mg)"/>
+        </svg>
+      </div>
+      <h2 class="rank" id="rankTitle">運算勇者</h2>
+      <p class="rank-sub" id="rankSub">你完成了四則運算試煉。</p>
+      <div class="stars" id="stars"><span>★</span><span>★</span><span>★</span></div>
+      <div class="stats">
+        <div class="stat"><span>答對題數</span><b id="stCorrect">0</b></div>
+        <div class="stat"><span>正確率</span><b id="stAcc">0%</b></div>
+        <div class="stat"><span>最高連擊</span><b id="stCombo">0</b></div>
+        <div class="stat"><span>總得分</span><b class="amber" id="stScore">0</b></div>
+      </div>
+      <div class="review" id="review"></div>
+      <div class="result-btns">
+        <button class="btn amber" id="replayBtn">再挑戰一次 ↻</button>
+        <button class="btn ghost" id="backBtn">回到簡報</button>
+      </div>
+    </div>
+  </main>
+
+  <footer class="g-foot">
+    <span>作答後會顯示解析；按 Esc 可離開試煉</span>
+    <div class="dotline" id="dotline"></div>
+  </footer>
+</div>
+<div class="confetti" id="confetti"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+const $ = (s, c = document) => c.querySelector(s);
+const $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
+const stage = $('#stage');
+const slides = $$('.slide');
+let cur = 0;
+let gameOpen = false;
+
+/* ---------- 版面縮放 ---------- */
+function fit(){
+  const s = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+  stage.style.transform = 'translate(-50%,-50%) scale(' + s + ')';
+}
+window.addEventListener('resize', fit);
+fit();
+
+/* ---------- 頁面導覽 ---------- */
+const dotsBox = $('#dots');
+slides.forEach((s, i) => {
+  const b = document.createElement('button');
+  b.className = 'dot' + (i === 0 ? ' on' : '');
+  b.type = 'button';
+  b.title = s.dataset.title || ('第 ' + (i + 1) + ' 頁');
+  b.setAttribute('aria-label', '前往：' + b.title);
+  b.addEventListener('click', () => go(i));
+  dotsBox.appendChild(b);
+});
+const dots = $$('.dot');
+
+function go(n){
+  n = Math.max(0, Math.min(slides.length - 1, n));
+  if (gameOpen) return;
+  if (n === cur){ updateNav(); return; }
+  slides[cur].classList.remove('active');
+  cur = n;
+  slides[cur].classList.add('active');
+  updateNav();
+  try { history.replaceState(null, '', '#s' + (cur + 1)); } catch(e){}
+  stage.focus();
+}
+function updateNav(){
+  dots.forEach((d, i) => d.classList.toggle('on', i === cur));
+  $('#counter').textContent = String(cur + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
+  $('#progress').style.width = ((cur + 1) / slides.length * 100) + '%';
+  $('#prevBtn').disabled = cur === 0;
+  $('#nextBtn').disabled = cur === slides.length - 1;
+}
+$('#prevBtn').addEventListener('click', () => go(cur - 1));
+$('#nextBtn').addEventListener('click', () => go(cur + 1));
+$$('[data-go]').forEach(el => el.addEventListener('click', () => go(Number(el.dataset.go))));
+updateNav();
+
+const m = location.hash.match(/^#s(\d+)$/);
+if (m) go(Math.min(slides.length - 1, Number(m[1]) - 1));
+
+/* ---------- 鍵盤與滑動 ---------- */
+document.addEventListener('keydown', e => {
+  if (gameOpen){
+    if (e.key === 'Escape') closeGame();
+    return;
+  }
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'textarea') return;
+  if (e.key === 'ArrowRight' || e.key === 'PageDown' || (e.key === ' ' && tag !== 'button')){
+    e.preventDefault(); go(cur + 1);
+  } else if (e.key === 'ArrowLeft' || e.key === 'PageUp'){
+    e.preventDefault(); go(cur - 1);
+  } else if (e.key === 'Home'){ e.preventDefault(); go(0); }
+  else if (e.key === 'End'){ e.preventDefault(); go(slides.length - 1); }
+  else if (e.key.toLowerCase() === 'f'){ toggleFS(); }
+  else if (e.key.toLowerCase() === 'm'){ toggleSound(); }
+});
+let tx = 0, ty = 0, tracking = false;
+stage.addEventListener('pointerdown', e => {
+  if (e.target.closest('button,a,input')) return;
+  tx = e.clientX; ty = e.clientY; tracking = true;
+});
+stage.addEventListener('pointerup', e => {
+  if (!tracking) return; tracking = false;
+  const dx = e.clientX - tx, dy = e.clientY - ty;
+  if (Math.abs(dx) > 65 && Math.abs(dx) > Math.abs(dy) * 1.4) go(cur + (dx < 0 ? 1 : -1));
+});
+
+/* ---------- 全螢幕與音效 ---------- */
+function toggleFS(){
+  if (!document.fullscreenElement){
+    (document.documentElement.requestFullscreen || function(){}).call(document.documentElement);
+  } else {
+    (document.exitFullscreen || function(){}).call(document);
+  }
+}
+$('#fsBtn').addEventListener('click', toggleFS);
+let muted = false, actx = null;
+function ensureAudio(){
+  if (!actx){
+    try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){ actx = null; }
+  }
+  if (actx && actx.state === 'suspended') actx.resume();
+  return actx;
+}
+function beep(freq, dur = .08, type = 'sine', vol = .04, delay = 0){
+  if (muted) return;
+  const ctx = ensureAudio(); if (!ctx) return;
+  const t = ctx.currentTime + delay;
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(vol, t + .012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(ctx.destination);
+  o.start(t); o.stop(t + dur + .03);
+}
+function toggleSound(){
+  muted = !muted;
+  $('#soundBtn').textContent = muted ? '✕' : '♪';
+  $('#soundBtn').title = muted ? '音效已關閉 (M)' : '音效開啟 (M)';
+  toast(muted ? '音效已關閉' : '音效已開啟');
+  if (!muted) beep(660, .06);
+}
+$('#soundBtn').addEventListener('click', toggleSound);
+
+let toastTimer = null;
+function toast(msg){
+  const el = $('#toast');
+  el.textContent = msg; el.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('on'), 1800);
+}
+
+/* ---------- 小工具 ---------- */
+const store = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+};
+function shuffle(a){
+  const b = a.slice();
+  for (let i = b.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    const t = b[i]; b[i] = b[j]; b[j] = t;
+  }
+  return b;
+}
+
+/* ---------- 互動：揭曉、翻卡、逐步解題 ---------- */
+$$('[data-reveal]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.closest('[id]') || btn.parentElement;
+    const reveal = target.nextElementSibling && target.nextElementSibling.classList.contains('reveal')
+      ? target.nextElementSibling : target.querySelector('.reveal');
+    if (!reveal) return;
+    const open = reveal.classList.toggle('open');
+    btn.textContent = open ? '收起 ←' : (btn.dataset.label || '看關鍵 →');
+    beep(open ? 520 : 380, .05);
+  });
+});
+$$('.flip').forEach(card => {
+  card.addEventListener('click', () => {
+    const open = card.classList.toggle('open');
+    card.setAttribute('aria-pressed', open ? 'true' : 'false');
+    beep(open ? 600 : 420, .05, 'triangle');
+  });
+});
+let step = 0;
+const stepBoxes = $$('#stepDemo .step-box');
+const stepNext = $('#stepNext');
+const stepReset = $('#stepReset');
+function paintStep(){
+  stepBoxes.forEach((b, i) => b.classList.toggle('on', i <= step));
+  stepNext.textContent = step >= 3 ? '完成 ✓' : '下一步 →';
+  stepNext.disabled = step >= 3;
+}
+if (stepNext){
+  stepNext.addEventListener('click', () => { if (step < 3){ step++; paintStep(); beep(560, .05); } });
+  stepReset.addEventListener('click', () => { step = 0; paintStep(); toast('已重設解題步驟'); });
+  paintStep();
+}
+
+/* ---------- 最佳紀錄 ---------- */
+const best = Number(store.get('mathQuestBest', 0)) || 0;
+$('#bestScore').textContent = best;
+
+/* ============================================================
+   遊戲資料
+   ============================================================ */
+const LEVELS = {
+  1: { name: '暖身', cls: '',    time: 30, base: 10 },
+  2: { name: '進階', cls: 'lv2', time: 25, base: 15 },
+  3: { name: '魔王', cls: 'lv3', time: 20, base: 20 }
+};
+const QUESTIONS = [
+  { lv: 1, q: '25 − 3 × 7 = ?', ans: '4',
+    opts: ['4', '154', '−4', '22'],
+    exp: '先乘除後加減：3 × 7 = 21，25 − 21 = 4。' },
+  { lv: 1, q: '(−8) + (−5) = ?', ans: '−13',
+    opts: ['−13', '−3', '13', '3'],
+    exp: '同號相加，保留負號並把絕對值相加：−(8 + 5) = −13。' },
+  { lv: 1, q: '7 − (−9) = ?', ans: '16',
+    opts: ['16', '−2', '2', '−16'],
+    exp: '減去負數等於加上它的相反數：7 + 9 = 16。' },
+  { lv: 1, q: '(−4) × 6 = ?', ans: '−24',
+    opts: ['−24', '24', '−10', '10'],
+    exp: '異號得負，絕對值相乘：4 × 6 = 24，所以答案是 −24。' },
+  { lv: 2, q: '(−36) ÷ (−9) = ?', ans: '4',
+    opts: ['4', '−4', '27', '−27'],
+    exp: '同號得正，36 ÷ 9 = 4；不要和減法規則混在一起。' },
+  { lv: 2, q: '(−3)² + 2³ = ?', ans: '17',
+    opts: ['17', '−17', '1', '−1'],
+    exp: '先算乘方：(−3)² = 9、2³ = 8，再相加得 17。' },
+  { lv: 2, q: '−3² + 4 = ?', ans: '−5',
+    opts: ['−5', '13', '5', '−13'],
+    exp: '沒有括號時，−3² = −(3²) = −9，所以 −9 + 4 = −5。' },
+  { lv: 2, q: '24 ÷ [6 − (−2)] = ?', ans: '3',
+    opts: ['3', '4', '2', '24'],
+    exp: '先算中括號：6 − (−2) = 8，再算 24 ÷ 8 = 3。' },
+  { lv: 3, q: '(−48) ÷ 6 × (−2) = ?', ans: '16',
+    opts: ['16', '−16', '4', '−4'],
+    exp: '乘除同級由左而右：−48 ÷ 6 = −8，−8 × (−2) = 16。' },
+  { lv: 3, q: '−4 × (25 − 7) = ?', ans: '−72',
+    opts: ['−72', '72', '−128', '128'],
+    exp: '括號先算：25 − 7 = 18，再算 −4 × 18 = −72。也可用分配律檢驗。' },
+  { lv: 3, q: '5 − 3 × (2 − 5) = ?', ans: '14',
+    opts: ['14', '−4', '4', '−14'],
+    exp: '括號：2 − 5 = −3；乘法：3 × (−3) = −9；最後 5 − (−9) = 14。' },
+  { lv: 3, q: '氣溫 −7°C，先上升 12°C，再下降 3°C，最後是幾度？', ans: '2°C', word: true,
+    opts: ['2°C', '−2°C', '8°C', '−22°C'],
+    exp: '把變化寫成算式：−7 + 12 − 3 = 2，所以最後是 2°C。' }
+];
+
+/* ============================================================
+   遊戲狀態
+   ============================================================ */
+let quiz = [], gi = 0, score = 0, hearts = 3, combo = 0, maxCombo = 0;
+let correctCount = 0, results = [], locked = true, timeLeft = 0;
+let timerId = null, practice = false, lastMode = 'timed';
+const C = 94.25;
+
+function startGame(mode){
+  lastMode = mode;
+  practice = mode === 'practice';
+  quiz = QUESTIONS.map(q => Object.assign({}, q, { opts: shuffle(q.opts) }));
+  gi = 0; score = 0; hearts = 3; combo = 0; maxCombo = 0;
+  correctCount = 0; results = []; locked = true; timeLeft = 0;
+  stopTimer();
+  gameOpen = true;
+  $('#game').classList.remove('hidden');
+  $('#playArea').classList.remove('hidden');
+  $('#result').classList.add('hidden');
+  $('#confetti').innerHTML = '';
+  ensureAudio();
+  renderQuestion();
+  setTimeout(() => { const b = $('#opts button'); if (b) b.focus(); }, 60);
+}
+
+function renderQuestion(){
+  const q = quiz[gi];
+  if (!q) { finishGame(); return; }
+  const lv = LEVELS[q.lv];
+  $('#qLevel').textContent = lv.name;
+  $('#qLevel').className = 'lv ' + lv.cls;
+  $('#qIndex').textContent = '第 ' + (gi + 1) + ' / ' + quiz.length + ' 題';
+  $('#qNote').textContent = practice ? '練習模式・不計時' : '選一個答案';
+  $('#qText').textContent = q.q;
+  $('#qText').className = 'q-text' + (q.word ? ' small' : '');
+  const box = $('#opts');
+  box.innerHTML = '';
+  const keys = ['A', 'B', 'C', 'D'];
+  q.opts.forEach((val, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'opt';
+    b.dataset.val = val;
+    b.innerHTML = '<span class="key">' + keys[i] + '</span><span>' + val + '</span>';
+    b.addEventListener('click', () => pick(b, val));
+    box.appendChild(b);
+  });
+  const fb = $('#fb');
+  fb.className = 'fb'; fb.innerHTML = '';
+  locked = false;
+  updateHUD();
+  $('#gProgress').style.width = (gi / quiz.length * 100) + '%';
+  if (practice){
+    timeLeft = 0;
+    updateTimer(1);
+  } else {
+    timeLeft = lv.time;
+    startTimer(lv.time);
+  }
+}
+
+function startTimer(total){
+  stopTimer();
+  const t0 = performance.now();
+  updateTimer(1);
+  timerId = setInterval(() => {
+    const elapsed = (performance.now() - t0) / 1000;
+    timeLeft = Math.max(0, total - elapsed);
+    updateTimer(timeLeft / total);
+    if (timeLeft <= 0){
+      stopTimer();
+      timeUp();
+    }
+  }, 90);
+}
+function stopTimer(){
+  if (timerId){ clearInterval(timerId); timerId = null; }
+}
+function updateTimer(frac){
+  const ring = $('#timerRing');
+  const wrap = $('#timerWrap');
+  if (!ring) return;
+  ring.style.strokeDashoffset = String(C * (1 - Math.max(0, Math.min(1, frac))));
+  $('#timerNum').textContent = practice ? '∞' : String(Math.ceil(timeLeft));
+  if (practice){
+    ring.setAttribute('stroke', '#5eead4');
+    wrap.classList.remove('warn');
+  } else {
+    const warn = timeLeft <= 5.2;
+    ring.setAttribute('stroke', warn ? '#fb7185' : '#5eead4');
+    wrap.classList.toggle('warn', warn);
+  }
+}
+
+function updateHUD(){
+  const hs = $('#hearts');
+  hs.innerHTML = '';
+  for (let i = 0; i < 3; i++){
+    const s = document.createElement('span');
+    s.className = 'h' + (i < hearts ? '' : ' off');
+    s.textContent = '♥';
+    hs.appendChild(s);
+  }
+  $('#scoreVal').textContent = score;
+  $('#comboVal').textContent = combo;
+  $('#comboHud').classList.toggle('on', combo >= 2);
+  const dl = $('#dotline');
+  dl.innerHTML = '';
+  for (let i = 0; i < quiz.length; i++){
+    const d = document.createElement('i');
+    if (results[i]) d.className = results[i].ok ? 'on' : 'bad';
+    dl.appendChild(d);
+  }
+}
+
+function pick(btn, val){
+  if (locked || !gameOpen) return;
+  locked = true;
+  stopTimer();
+  const q = quiz[gi];
+  const ok = val === q.ans;
+  const buttons = $$('#opts .opt');
+  buttons.forEach(b => {
+    b.disabled = true;
+    if (b.dataset.val === q.ans) b.classList.add('right');
+    else if (b === btn) b.classList.add('wrong');
+    else b.classList.add('dim');
+  });
+  results.push({ q: q.q, chosen: val, ans: q.ans, ok: ok });
+  if (ok){
+    combo++;
+    maxCombo = Math.max(maxCombo, combo);
+    correctCount++;
+    const mult = 1 + Math.min(combo - 1, 4) * 0.25;
+    const bonus = practice ? 5 : Math.ceil(timeLeft);
+    const gain = Math.round((LEVELS[q.lv].base + bonus) * mult);
+    score += gain;
+    beep(660, .07, 'sine', .045);
+    beep(880, .09, 'sine', .04, .08);
+    feedback('ok', '<b>答對了！</b> ' + q.exp, '+' + gain + ' XP', hearts > 0);
+  } else {
+    hearts--;
+    combo = 0;
+    beep(180, .16, 'sawtooth', .035);
+    feedback('no', '<b>再檢查一次。</b> 正確答案是 <b>' + q.ans + '</b>。' + q.exp, '−1 ♥', hearts > 0);
+  }
+  updateHUD();
+  $('#gProgress').style.width = ((gi + 1) / quiz.length * 100) + '%';
+}
+
+function timeUp(){
+  if (locked || !gameOpen) return;
+  locked = true;
+  const q = quiz[gi];
+  const buttons = $$('#opts .opt');
+  buttons.forEach(b => {
+    b.disabled = true;
+    if (b.dataset.val === q.ans) b.classList.add('right');
+    else b.classList.add('dim');
+  });
+  results.push({ q: q.q, chosen: '未作答', ans: q.ans, ok: false });
+  hearts--;
+  combo = 0;
+  beep(140, .22, 'sawtooth', .035);
+  feedback('no', '<b>時間到！</b> 正確答案是 <b>' + q.ans + '</b>。' + q.exp, '−1 ♥', hearts > 0);
+  updateHUD();
+  $('#gProgress').style.width = ((gi + 1) / quiz.length * 100) + '%';
+}
+
+function feedback(kind, html, gain, more){
+  const fb = $('#fb');
+  fb.className = 'fb show ' + kind;
+  fb.innerHTML = '<div class="txt">' + html + '</div><div style="display:flex;align-items:center;gap:12px"><span class="gain">' + gain + '</span><button class="btn sm ' + (kind === 'ok' ? '' : 'ghost') + '" id="fbNext">' + (more ? '下一題 →' : '查看結果 →') + '</button></div>';
+  const b = $('#fbNext');
+  b.addEventListener('click', () => {
+    if (more) nextQuestion(); else finishGame();
+  });
+  b.focus();
+}
+
+function nextQuestion(){
+  if (gi + 1 >= quiz.length){ finishGame(); return; }
+  gi++;
+  renderQuestion();
+}
+
+function finishGame(){
+  stopTimer();
+  locked = true;
+  const total = results.length;
+  const acc = total ? correctCount / total : 0;
+  let title, sub, starCount;
+  if (acc >= 1 && hearts > 0){
+    title = '四則運算大師'; sub = '符號、順序與分配律都難不倒你。這一輪，零失誤。'; starCount = 3;
+  } else if (acc >= 0.8){
+    title = '運算勇者'; sub = '你已經能穩定判斷符號與順序，再檢查一次細節就完美了。'; starCount = 3;
+  } else if (acc >= 0.6){
+    title = '見習魔法師'; sub = '基本規則已經掌握，建議回顧「運算順序」與「負號」的題目。'; starCount = 2;
+  } else {
+    title = '持續修煉中'; sub = '別急，先回到數線與符號規則，把每一步寫清楚，再挑戰一次。'; starCount = total >= 6 ? 1 : 0;
+  }
+  if (acc >= 0.9 && starCount === 3) starCount = 3;
+  $('#rankTitle').textContent = title;
+  $('#rankSub').textContent = sub;
+  const stars = $$('#stars span');
+  stars.forEach((s, i) => s.classList.toggle('on', i < starCount));
+  $('#stCorrect').textContent = correctCount + ' / ' + total;
+  $('#stAcc').textContent = Math.round(acc * 100) + '%';
+  $('#stCombo').textContent = maxCombo;
+  $('#stScore').textContent = score;
+
+  const rv = $('#review');
+  rv.innerHTML = '';
+  if (!results.length){
+    rv.innerHTML = '<div class="review-row"><span class="st">i</span><span class="rq">這一輪沒有作答紀錄。</span><span class="ra"></span></div>';
+  } else {
+    results.forEach(r => {
+      const row = document.createElement('div');
+      row.className = 'review-row' + (r.ok ? '' : ' bad');
+      row.innerHTML = '<span class="st">' + (r.ok ? '✓' : '✕') + '</span><span class="rq">' + r.q + '</span><span class="ra">你的：' + r.chosen + ' ／ 正解：' + r.ans + '</span>';
+      rv.appendChild(row);
+    });
+  }
+
+  const prev = Number(store.get('mathQuestBest', 0)) || 0;
+  if (score > prev){
+    store.set('mathQuestBest', score);
+    $('#bestScore').textContent = score;
+    toast('新紀錄！' + score + ' XP');
+  }
+
+  $('#playArea').classList.add('hidden');
+  $('#result').classList.remove('hidden');
+  $('#gProgress').style.width = '100%';
+  if (starCount >= 2) confettiBurst();
+  beep(660, .1, 'sine', .045);
+  beep(880, .1, 'sine', .04, .1);
+  beep(1100, .16, 'sine', .04, .2);
+}
+
+function confettiBurst(){
+  const box = $('#confetti');
+  box.innerHTML = '';
+  const colors = ['#5eead4', '#fcd34d', '#fb7185', '#a78bfa', '#60a5fa', '#34d399'];
+  for (let i = 0; i < 90; i++){
+    const p = document.createElement('i');
+    p.style.left = (Math.random() * 100) + 'vw';
+    p.style.background = colors[i % colors.length];
+    p.style.animationDuration = (2.3 + Math.random() * 2.2) + 's';
+    p.style.animationDelay = (Math.random() * .7) + 's';
+    p.style.setProperty('--dx', (Math.random() * 300 - 150) + 'px');
+    p.style.transform = 'rotate(' + Math.random() * 180 + 'deg)';
+    box.appendChild(p);
+  }
+  setTimeout(() => { box.innerHTML = ''; }, 5000);
+}
+
+function closeGame(){
+  if (!gameOpen) return;
+  stopTimer();
+  gameOpen = false;
+  $('#game').classList.add('hidden');
+  $('#confetti').innerHTML = '';
+  const start = $('#startTimed');
+  if (start) start.focus();
+}
+
+/* ---------- 遊戲按鈕 ---------- */
+$('#startTimed').addEventListener('click', () => startGame('timed'));
+$('#startPractice').addEventListener('click', () => startGame('practice'));
+$('#coverChallenge').addEventListener('click', () => startGame('timed'));
+$('#quickChallenge').addEventListener('click', () => startGame('timed'));
+$('#endChallenge').addEventListener('click', () => startGame('timed'));
+$('#gameClose').addEventListener('click', closeGame);
+$('#backBtn').addEventListener('click', closeGame);
+$('#replayBtn').addEventListener('click', () => startGame(lastMode));
+</script>
+</body>
+</html>
+</body>
+</html>
